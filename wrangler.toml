@@ -22,8 +22,8 @@ binding = "AI"
 # KV namespace for caching predictions
 [[kv_namespaces]]
 binding = "FLAG_CACHE"
-id = "your-kv-namespace-id"
-preview_id = "your-preview-kv-namespace-id"
+id = "4b4f5388069744d4a89826453de1ee3c"
+preview_id = "4b4f5388069744d4a89826453de1ee3c"
 
 # Environment variables
 [vars]

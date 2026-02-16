@@ -1,21 +1,23 @@
-# 🚩 Feature Flag Impact Analyzer
+#  Feature Flag Impact Analyzer
 
 An AI-powered feature flag monitoring and impact prediction system built on Cloudflare's edge infrastructure. This application uses **Workers AI (Llama 3.3)**, **Durable Objects** for state management, and provides real-time insights through **WebSocket** connections.
 
-![Cloudflare Workers](https://img.shields.io/badge/Cloudflare-Workers-F38020?logo=cloudflare)
-![Workers AI](https://img.shields.io/badge/Workers-AI-F38020?logo=cloudflare)
-![Durable Objects](https://img.shields.io/badge/Durable-Objects-F38020?logo=cloudflare)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.3-3178C6?logo=typescript)
+Live demo: https://cf-ai-feature-flag-analyzer.dhairya2004first.workers.dev/ui
 
-## 🎯 Features
+![alt text](image-1.png)
+![alt text](image-2.png)
+![alt text](image.png)
+
+
+##  Features
 
 ### Core Capabilities
 
-- **🤖 AI-Powered Impact Predictions**: Uses Llama 3.3 70B to analyze feature flag changes and predict their impact on system performance
-- **📊 Real-time Anomaly Detection**: Automatically detects error spikes, latency increases, and other anomalies
-- **💬 Conversational AI Interface**: Chat with the AI assistant about your feature flags, predictions, and system health
-- **🔄 Real-time Updates**: WebSocket-based live updates for flags, predictions, and anomalies
-- **💾 Persistent State**: SQLite-backed storage via Durable Objects for flags, metrics, and conversation history
+- **AI-Powered Impact Predictions**: Uses Llama 3.3 70B to analyze feature flag changes and predict their impact on system performance
+- **Real-time Anomaly Detection**: Automatically detects error spikes, latency increases, and other anomalies
+- **Conversational AI Interface**: Chat with the AI assistant about your feature flags, predictions, and system health
+- **Real-time Updates**: WebSocket-based live updates for flags, predictions, and anomalies
+- **Persistent State**: SQLite-backed storage via Durable Objects for flags, metrics, and conversation history
 
 ### Technical Highlights
 
@@ -27,7 +29,7 @@ An AI-powered feature flag monitoring and impact prediction system built on Clou
 | State Management | Durable Objects persistent storage |
 | Framework | Hono (lightweight web framework) |
 
-## 🏗️ Architecture
+##  Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -55,7 +57,7 @@ An AI-powered feature flag monitoring and impact prediction system built on Clou
 └─────────────────────────────────────────────────────────────┘
 ```
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 
@@ -107,7 +109,7 @@ npm run deploy
 
 Your application will be deployed to `https://cf-ai-feature-flag-analyzer.<your-subdomain>.workers.dev`
 
-## 📖 Usage Guide
+## Usage Guide
 
 ### Web Interface
 
@@ -210,7 +212,7 @@ ws.send(JSON.stringify({
 ws.send(JSON.stringify({ type: 'subscribe_anomalies' }));
 ```
 
-## 🧠 AI Capabilities
+##  AI Capabilities
 
 ### Impact Prediction
 
@@ -242,7 +244,7 @@ Ask the assistant about:
 - Anomaly explanations and recommendations
 - Historical patterns and insights
 
-## 🔧 Configuration
+##  Configuration
 
 ### Environment Variables
 
@@ -271,7 +273,7 @@ new_sqlite_classes = ["FeatureFlagAgent"]
 binding = "AI"
 ```
 
-## 🧪 Testing
+##  Testing
 
 Run the test suite:
 
@@ -289,7 +291,7 @@ npm test
 6. **Check predictions**: View the Dashboard for impact predictions
 7. **Chat with AI**: Use the AI Chat section to ask questions
 
-## 📁 Project Structure
+##  Project Structure
 
 ```
 cf_ai_feature_flag_analyzer/
@@ -304,26 +306,4 @@ cf_ai_feature_flag_analyzer/
 └── PROMPTS.md          # AI prompts used in development
 ```
 
-## 🤝 Contributing
 
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/amazing-feature`
-3. Commit your changes: `git commit -m 'Add amazing feature'`
-4. Push to the branch: `git push origin feature/amazing-feature`
-5. Open a Pull Request
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- [Cloudflare Workers](https://workers.cloudflare.com/) for the serverless platform
-- [Workers AI](https://ai.cloudflare.com/) for LLM capabilities
-- [Hono](https://hono.dev/) for the lightweight web framework
-- [Tailwind CSS](https://tailwindcss.com/) for styling
-- [Lucide Icons](https://lucide.dev/) for the icon set
-
----
-
-Built with ❤️ on Cloudflare
