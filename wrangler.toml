@@ -1,0 +1,42 @@
+# Cloudflare Workers configuration
+name = "cf-ai-feature-flag-analyzer"
+main = "src/index.ts"
+compatibility_date = "2024-12-05"
+compatibility_flags = ["nodejs_compat"]
+
+# Durable Objects binding for stateful agent
+[durable_objects]
+bindings = [
+  { name = "FEATURE_FLAG_AGENT", class_name = "FeatureFlagAgent" }
+]
+
+# Migrations for Durable Objects with SQLite
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["FeatureFlagAgent"]
+
+# Workers AI binding for Llama 3.3
+[ai]
+binding = "AI"
+
+# KV namespace for caching predictions
+[[kv_namespaces]]
+binding = "FLAG_CACHE"
+id = "your-kv-namespace-id"
+preview_id = "your-preview-kv-namespace-id"
+
+# Environment variables
+[vars]
+ENVIRONMENT = "development"
+
+# Development environment
+[env.development]
+name = "cf-ai-feature-flag-analyzer-dev"
+[env.development.vars]
+ENVIRONMENT = "development"
+
+# Production environment  
+[env.production]
+name = "cf-ai-feature-flag-analyzer-prod"
+[env.production.vars]
+ENVIRONMENT = "production"
