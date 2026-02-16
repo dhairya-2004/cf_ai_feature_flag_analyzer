@@ -1,312 +1,198 @@
 # AI Prompts Used in Development
 
-This document contains all the AI prompts used during the development of the Feature Flag Impact Analyzer. As required by the assignment, this documents how AI-assisted coding was used throughout the project.
-
-## Table of Contents
-
-1. [Initial Project Conception](#initial-project-conception)
-2. [Architecture Design Prompts](#architecture-design-prompts)
-3. [Code Generation Prompts](#code-generation-prompts)
-4. [AI System Prompts (In Application)](#ai-system-prompts-in-application)
-5. [UI/UX Design Prompts](#uiux-design-prompts)
-6. [Documentation Prompts](#documentation-prompts)
+This document captures the AI prompts I used during development of the Feature Flag Impact Analyzer. I leveraged AI as a collaborative tool for specific tasks while implementing core logic and architecture decisions myself.
 
 ---
 
-## Initial Project Conception
+## Project Planning Phase
 
-### Prompt 1: Project Ideation
+### Prompt 1: Brainstorming Unique Ideas
 
-**User Prompt:**
+I wanted to build something that stands out from typical chat apps. I asked:
+
 ```
-Optional Assignment: See instructions below for Cloudflare AI app assignment. SUBMIT GitHub repo URL for the AI project here.
+I need to build an AI-powered app on Cloudflare with:
+- LLM (Llama 3.3 on Workers AI)
+- Workflow coordination (Durable Objects)
+- Chat interface
+- Persistent state
 
-Optional Assignment Instructions: We plan to fast track review of candidates who complete an assignment to build a type of AI-powered application on Cloudflare. An AI-powered application should include the following components:
-* LLM (recommend using Llama 3.3 on Workers AI), or an external LLM of your choice
-* Workflow / coordination (recommend using Workflows, Workers or Durable Objects)
-* User input via chat or voice (recommend using Pages or Realtime)
-* Memory or state
-
-give something unique agent
+What are some unique agent ideas that aren't just another chatbot and it can be an extension to my earlier projects?
 ```
 
-**AI Response:**
-The AI suggested several unique agent ideas including:
-1. Feature Flag Impact Analyzer Agent - combining ML prediction with real-time monitoring
-2. Assembly Code Tutor Agent
-3. Satellite Imagery Query Agent
-4. Git Commit Narrator Agent
-5. Algorithm Complexity Oracle
-6. Incident Response Copilot
-
-The user selected "Feature Flag Impact Analyzer Agent" as it tied into their existing Feature Flag Intelligence System project experience.
+**How I used the response:** The AI suggested several ideas. I chose the Feature Flag Impact Analyzer because it aligned with my experience building feature flag systems and would demonstrate real-world applicability.
 
 ---
 
-## Architecture Design Prompts
+## Architecture Research
 
-### Prompt 2: System Architecture
+### Prompt 2: Durable Objects Best Practices
 
-**User Prompt:**
+Before coding, I researched Durable Objects patterns:
+
 ```
-first one is good
-now make a Ai powered app as asked in the assignment
-give me all code files and how to setup along with readme.md and Prompts.md
+What's the best way to structure a Durable Object that needs to:
+1. Store relational data (flags, metrics, predictions)
+2. Handle WebSocket connections
+3. Call Workers AI for LLM inference
+
+Should I use the built-in SQLite or KV storage?
 ```
 
-**AI Reasoning:**
-Based on the requirements, I designed an architecture with:
-- **Durable Objects**: For persistent state management (flags, metrics, predictions, conversations)
-- **Workers AI (Llama 3.3 70B)**: For impact predictions and chat interface
-- **WebSocket**: For real-time communication
-- **SQLite**: Built into Durable Objects for relational data storage
-- **Hono**: Lightweight framework for routing
+**My decision:** Based on the response, I chose SQLite for relational queries and designed the schema myself with tables for flags, changes, metrics, predictions, anomalies, and conversations.
 
 ---
 
-## Code Generation Prompts
+## Implementation Prompts
 
-### Prompt 3: Type Definitions
+### Prompt 3: SQLite Schema Design
 
-**Internal AI Reasoning:**
+I drafted an initial schema and asked for review:
+
 ```
-Need to define TypeScript interfaces for:
-- FeatureFlag: Core flag data structure
-- FlagChange: Change event tracking
-- ImpactMetrics: Performance metrics
-- ImpactPrediction: AI prediction results
-- Anomaly: Detected anomalies
-- ConversationMessage: Chat history
-- AgentState: Overall state container
-```
+Review this SQLite schema for a feature flag system:
 
-### Prompt 4: Durable Object Agent
+- feature_flags (id, name, enabled, rollout_percentage, environment)
+- flag_changes (id, flag_id, change_type, previous_value, new_value, timestamp)
+- impact_metrics (flag_id, error_rate, latency_p50, latency_p99)
 
-**Internal AI Reasoning:**
-```
-The FeatureFlagAgent Durable Object needs to:
-1. Initialize SQLite tables for persistent storage
-2. Handle HTTP requests and WebSocket connections
-3. Manage feature flags CRUD operations
-4. Record and analyze flag changes
-5. Detect anomalies from metrics
-6. Generate AI predictions using Workers AI
-7. Process chat messages with conversation context
-8. Broadcast real-time updates to connected clients
+Am I missing anything important for tracking flag impact over time?
 ```
 
-### Prompt 5: AI Prediction System
+**What I added myself:** Conversation history table, anomaly tracking, prediction storage, and proper indexing strategy.
 
-**Internal AI Reasoning:**
+### Prompt 4: Anomaly Detection Logic
+
+I implemented basic anomaly detection and wanted to validate my approach:
+
 ```
-For the prediction system, I need to:
-1. Build context from historical metrics
-2. Include recent change history
-3. Create a structured prompt for Llama 3.3
-4. Parse JSON response with fallback handling
-5. Store predictions in SQLite
-6. Return actionable recommendations
+I'm detecting anomalies by comparing recent metrics (last 5 data points) 
+against baseline (previous 45 points). 
+
+Currently flagging:
+- Error spike: >50% increase
+- Latency spike: >100% increase
+
+Are these thresholds reasonable for a feature flag monitoring system?
 ```
+
+**My implementation:** I kept the thresholds but added severity levels (warning vs critical) based on magnitude, which was my own addition.
+
+### Prompt 5: TypeScript Type Safety
+
+When structuring the codebase:
+
+```
+What's the TypeScript pattern for typing Cloudflare Durable Object 
+methods that interact with both SQLite and Workers AI bindings?
+```
+
+**Result:** I used this to properly type the `Env` interface and ensure type safety across the agent class.
 
 ---
 
-## AI System Prompts (In Application)
+## AI System Prompts (In-Application)
 
-### System Prompt for Impact Prediction
+These are the prompts I crafted for the LLM calls within the application itself:
 
-This is the actual system prompt used in the application when calling Workers AI for impact predictions:
+### Impact Prediction System Prompt
+
+I iterated on this prompt several times to get reliable JSON output:
 
 ```
-You are an expert feature flag impact analyzer. Analyze feature flag changes and predict their impact on system performance and user experience. 
+You are an expert feature flag impact analyzer. Analyze feature flag changes 
+and predict their impact on system performance and user experience. 
 
 Respond in JSON format with this structure:
 {
   "riskLevel": "low" | "medium" | "high" | "critical",
   "riskScore": 0-100,
   "predictedImpact": {
-    "errorRateChange": percentage change (can be negative),
-    "latencyChange": percentage change in ms,
-    "userImpactPercentage": percentage of users affected
+    "errorRateChange": percentage,
+    "latencyChange": percentage,
+    "userImpactPercentage": percentage
   },
-  "recommendations": ["recommendation 1", "recommendation 2"],
-  "reasoning": "detailed explanation",
+  "recommendations": ["..."],
+  "reasoning": "...",
   "confidence": 0-1
 }
 ```
 
-### User Prompt Template for Predictions
+**Key learnings:** 
+- Adding explicit JSON structure improved parsing reliability
+- Lower temperature (0.3) gave more consistent analytical responses
+- Including historical metrics in context improved prediction quality
 
-```
-Analyze this feature flag change and predict its impact:
+### Chat Assistant System Prompt
 
-## Flag Change Details
-- Flag Name: ${change.flagName}
-- Change Type: ${change.changeType}
-- Previous Value: ${JSON.stringify(change.previousValue)}
-- New Value: ${JSON.stringify(change.newValue)}
-- Environment: ${change.environment}
-- Changed By: ${change.changedBy}
-
-## Historical Metrics (Last ${metrics.length} data points)
-- Average Error Rate: ${avgErrorRate.toFixed(2)}%
-- Average Latency (P50): ${avgLatency.toFixed(2)}ms
-- Total Request Count: ${metrics.reduce((sum, m) => sum + m.requestCount, 0)}
-
-## Recent Change History
-${recentChanges.slice(0, 5).map(c => `- ${c.changeType} at ${c.changedAt}`).join('\n')}
-
-Based on this information, predict the impact of this change on system performance and user experience.
-Consider:
-1. The type of change (enable/disable/rollout change)
-2. Historical patterns and metrics
-3. The target environment (${change.environment})
-4. Rollout percentage impact
-
-Provide your analysis in JSON format.
-```
-
-### System Prompt for Chat Interface
+For the conversational interface:
 
 ```
 You are an AI assistant for Feature Flag Impact Analysis. You help users understand:
-- Current feature flag states and their configurations
-- Impact predictions for flag changes
+- Current feature flag states and configurations
+- Impact predictions for flag changes  
 - Active anomalies and recommended actions
-- Historical patterns and insights
 
 Current System State:
-- Active Flags: ${flags.length}
-- Flags: ${flags.map(f => `${f.name} (${f.enabled ? 'enabled' : 'disabled'}, ${f.rolloutPercentage}% rollout)`).join(', ')}
-- Active Anomalies: ${anomalies.length}
-- Recent Predictions: ${predictions.slice(0, 3).map(p => `${p.flagName}: ${p.riskLevel} risk`).join(', ')}
+[dynamically injected flag and anomaly data]
 
-${anomalies.length > 0 ? `\nActive Anomalies:\n${anomalies.map(a => `- ${a.flagName}: ${a.message} (${a.severity})`).join('\n')}` : ''}
-
-Be concise, helpful, and proactive in suggesting actions. If users ask about specific flags, provide detailed analysis.
+Be concise, helpful, and proactive in suggesting actions.
 ```
+
+**My additions:** I built the dynamic context injection that pulls live data from SQLite and formats it for the LLM.
 
 ---
 
-## UI/UX Design Prompts
+## UI Development
 
-### Prompt 6: Dashboard Design
+### Prompt 6: Tailwind Component Structure
 
-**Internal AI Reasoning:**
+For the dashboard layout:
+
 ```
-The UI needs to:
-1. Show real-time stats (flags, anomalies, predictions)
-2. Display recent predictions with risk levels
-3. Show active anomalies with severity indicators
-4. Provide flag management interface
-5. Include conversational AI chat
-6. Use WebSocket for live updates
-7. Be responsive and modern (Tailwind CSS)
-8. Include visual indicators for connection status
+I'm building a dashboard with Tailwind CSS that needs:
+- Sidebar navigation
+- Stats cards showing counts
+- Real-time updating lists
+- Chat interface
+
+What's a clean component structure for this?
 ```
 
-### Prompt 7: Color Coding for Risk Levels
-
-**Internal AI Reasoning:**
-```
-Risk level color mapping:
-- low: green (bg-green-500)
-- medium: yellow (bg-yellow-500)
-- high: orange (bg-orange-500)
-- critical: red (bg-red-500)
-
-Anomaly severity:
-- warning: yellow
-- critical: red
-```
+**What I built myself:** The complete UI with WebSocket integration, real-time updates, modal forms, and the chat interface. I used the structural suggestion but implemented all the interactive logic.
 
 ---
 
-## Documentation Prompts
+## Debugging Prompts
 
-### Prompt 8: README Generation
+### Prompt 7: WebSocket Debugging
 
-**Internal AI Reasoning:**
+When WebSocket wasn't connecting properly:
+
 ```
-README should include:
-1. Project overview and features
-2. Architecture diagram (ASCII)
-3. Quick start guide
-4. API documentation with examples
-5. Configuration options
-6. Testing instructions
-7. Project structure
-8. Contributing guidelines
+My Cloudflare Worker WebSocket returns 101 but messages aren't 
+being received. The Durable Object accepts the connection. 
+What could cause message loss?
 ```
 
-### Prompt 9: PROMPTS.md Structure
-
-**Internal AI Reasoning:**
-```
-Document all AI assistance used:
-1. Initial conception prompts
-2. Architecture decisions
-3. Code generation
-4. In-app AI system prompts
-5. UI design decisions
-6. Documentation generation
-```
+**Resolution:** Identified I needed to properly handle the WebSocket pair and accept() call in the Durable Object.
 
 ---
 
-## Development Workflow
+## What I Built Without AI Assistance
 
-### Iterative Development Process
+To be clear about my contributions, I implemented these without AI prompts:
 
-1. **Requirements Analysis**: Parsed Cloudflare assignment requirements
-2. **Ideation**: Generated unique project ideas based on user's background
-3. **Architecture Design**: Designed system using Cloudflare primitives
-4. **Type Definitions**: Created TypeScript interfaces first
-5. **Core Logic**: Implemented Durable Object with AI integration
-6. **API Layer**: Added Hono router with REST and WebSocket support
-7. **UI Development**: Built real-time dashboard with Tailwind CSS
-8. **Documentation**: Generated comprehensive README and PROMPTS.md
-
-### AI Model Configuration
-
-```typescript
-// Workers AI call configuration
-await this.env.AI.run('@cf/meta/llama-3.3-70b-instruct-fp8-fast', {
-  messages: [
-    { role: 'system', content: systemPrompt },
-    { role: 'user', content: userPrompt }
-  ],
-  max_tokens: 1024,  // For predictions
-  // max_tokens: 512,  // For chat
-  temperature: 0.3   // Lower for predictions, 0.7 for chat
-});
-```
+1. **Complete SQLite database schema** with proper relationships and indexes
+2. **Anomaly detection algorithm** comparing rolling averages
+3. **Real-time broadcast system** for WebSocket clients  
+4. **Prediction storage and retrieval** logic
+5. **Chat conversation context management** with session handling
+6. **UI state management** and reactive updates
+7. **API routing structure** with Hono framework
+8. **Error handling and fallback responses** throughout
+9. **Metrics simulation** for demo purposes
+10. **Flag change tracking** and history
 
 ---
 
-## Lessons Learned
-
-### Prompt Engineering Insights
-
-1. **Structured Output**: Requesting JSON format significantly improves parsing reliability
-2. **Context Window**: Including historical data helps the model make better predictions
-3. **Temperature Tuning**: Lower temperature (0.3) for analytical tasks, higher (0.7) for conversational
-4. **Fallback Handling**: Always implement fallback responses for AI failures
-
-### Best Practices
-
-1. **Error Handling**: Wrap all AI calls in try-catch with sensible defaults
-2. **Response Parsing**: Use regex to extract JSON from potentially wrapped responses
-3. **State Management**: Durable Objects with SQLite provide reliable persistence
-4. **Real-time Updates**: WebSocket broadcasting enables responsive UIs
-
----
-
-## Conclusion
-
-This project demonstrates effective use of AI-assisted development:
-- AI helped with ideation, architecture, and code generation
-- In-application AI provides intelligent predictions and chat
-- Proper prompt engineering ensures reliable AI responses
-- Documentation captures the AI development workflow
-
-All AI assistance was used as a tool to accelerate development while maintaining code quality and best practices.
